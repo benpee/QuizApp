@@ -1,0 +1,8 @@
+{
+  "short_name": "Quiz App",
+  "name": "Quiz App with random 5 questions and result after each session",
+ "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "lightblue"
+}
