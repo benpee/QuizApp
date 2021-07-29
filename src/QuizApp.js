@@ -1,92 +1,48 @@
-﻿import React, { useState, useEffect } from 'react';
-
-const qBank = [
-  {
-    questionId: "", question: "", answers: [], correct: ""
-  }
-];
-
-function QuizApp() {
-  const [questions, setQuestions] = useState({ 
-    questionBank: [],
-    score: 0,
-    response: 0
-  })
-
-  const fetchQuiz = async() => {
-    try {
-      const res = await fetch(qBank);
-      const data = await res.json()
-        setQuestions({
-          ...questions,
-          questionBank: data.sort(() => Math.floor(
-            0.5 - Math.random()).slice(0, 5))
-        })
-    } catch(err) { 
-       console.log(err);
-    }    
-  }
-  
-  useEffect(()=>{
-   fetchQuiz();
-  },[])
-
-  const playAgain = () => {
-    fetchQuiz();
-    setQuestions({
-      ...questions,
-      score: 0,
-      response: 0
+﻿import React from "react";
+import quizBank from './quizBank'
+import QuestionList from './QuestionList'
+import Result from './Result'
+ 
+class QuizApp extends React.Component {
+state= {
+quiz: [],
+score: 0, 
+response: 0
+}
+  playAgain = () => {
+    this.getQuiz();
+    this.setState({
+     score: 0,
+     response: 0
     })
   }
- 
-  const computeAnswer = (answer, correct) => {
-    if (answer === correct) {
-      setQuestions({...questions, score: score + 1})
-    }
-    setQuestions({...questions, response: response < 5 ? response + 1 : 5})
+  computeAnswer = (answer, correctAnswer) => {
+   const {score, response} = this.state
+   if (answer === correctAnswer) { 
+     this.setState({
+        score: score + 1
+     }) 
+   }
+   this.setState({
+     response: (response < 5) ? response + 1 : 5
+   })
   }
-  
-  const { questionBank, score, response } = questions
-  return (
-    <div className="">
-      {questionBank.length > 0 && response > 1 &&         questionBank.map(({question, questionId, correct, answers }) => (
-        <Question question={question} key={questionId} options={answers} selected={(answer) => computeAnswer(answer, correct)} />
-      ))}
-      <div>
-       {response === 5 &&
-       <ScoreBoard score={score} playAgain={playAgain} />} 
-      </div>
+  getQuiz = () => {
+    quizBank().then(res =>
+  this.setState({quiz: res})
+  )};
+  componentDidMount() {
+    this.getQuiz();
+  }
+
+  render() {
+  return (<div>
+   <div>Quiz Bee</div>
+    {(this.state.quiz.length > 0 && this.state.response < 5 )&& this.state.quiz.map(({question, answers, correct, questionId}) => <QuestionList key={questionId} answers={answers} question={question} selected={answer => this.computeAnswer(answer, correct)} />)}
+    {this.state.response === 5 ? <Result score={this.state.score} playAgain={this.playAgain} /> : null}
     </div>
-  );
+)
+}
 }
 
-function Question({ options, selected }) {
-  const [answer, setAnswer] = useState(options)
-  return (
-    <div>
-      {answer.map((text, index) => {
-        <li>
-          <button
-            onclick={() => { 
-              setAnswer([text]); selected(text);
-            }}
-          >
-           {text}
-          </button>
-        </li>
-      )}
-    </div>
-  );
-} 
-
-function ScoreBoard({ score, playAgain }) {
-  return (
-    <div>
-      <h2>You have gotten {score} / 5 correct answers!</h2>
-      <button onClick={playAgain}>Play Again!</button>
-    </div>
-  );
-}
-
-export default QuizApp;
+export default QuizApp
